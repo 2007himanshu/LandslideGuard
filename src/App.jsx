@@ -9,6 +9,8 @@ import {
 import "leaflet/dist/leaflet.css";
 import "./App.css";
 
+const API_BASE = "https://landslideguard-g6e9.onrender.com";
+
 const locations = [
   {
     name: "Chamoli",
@@ -53,12 +55,21 @@ function MapFocus({ position }) {
 function App() {
   const [selected, setSelected] = useState(locations[0]);
   const [rainfall, setRainfall] = useState(locations[0].rain);
+
   const [mlPrediction, setMlPrediction] = useState(null);
   const [mlLoading, setMlLoading] = useState(false);
   const [mlError, setMlError] = useState("");
 
+  const [searchQuery, setSearchQuery] = useState(
+    "recent landslide reports in India"
+  );
+  const [searchResults, setSearchResults] = useState(null);
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [searchError, setSearchError] = useState("");
+
   function selectLocation(name) {
     const location = locations.find((item) => item.name === name);
+
     if (location) {
       setSelected(location);
       setRainfall(location.rain);
@@ -79,7 +90,7 @@ function App() {
     setMlPrediction(null);
 
     try {
-      const response = await fetch("https://landslideguard-g6e9.onrender.com/predict", {
+      const response = await fetch(`${API_BASE}/predict`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -98,10 +109,50 @@ function App() {
       setMlPrediction(result);
     } catch (error) {
       setMlError(
-        "API se connect nahi ho paya. Check karo ki Flask server running hai (http://127.0.0.1:5000)."
+        error.message || "Could not connect to the demo prediction API."
       );
     } finally {
       setMlLoading(false);
+    }
+  }
+
+  async function searchLandslideInfo(event) {
+    if (event) event.preventDefault();
+
+    const query = searchQuery.trim();
+
+    if (!query) {
+      setSearchError("Please enter a search query.");
+      return;
+    }
+
+    setSearchLoading(true);
+    setSearchError("");
+    setSearchResults(null);
+
+    try {
+      const response = await fetch(`${API_BASE}/landslide-info`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ query }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          result.error || `Search request failed (${response.status})`
+        );
+      }
+
+      setSearchResults(result);
+    } catch (error) {
+      setSearchError(
+        error.message ||
+          "Could not retrieve web information. Please try again."
+      );
+    } finally {
+      setSearchLoading(false);
     }
   }
 
@@ -162,7 +213,9 @@ function App() {
               terrain slope can influence landslide susceptibility.
             </p>
           </div>
-          <div className="mountain-art" aria-hidden="true">🏔️</div>
+          <div className="mountain-art" aria-hidden="true">
+            🏔️
+          </div>
         </section>
 
         <section className="stats">
@@ -174,7 +227,9 @@ function App() {
 
           <article className="stat-card">
             <span>HIGH-RISK SAMPLES</span>
-            <strong>{locations.filter((item) => item.risk === "High").length}</strong>
+            <strong>
+              {locations.filter((item) => item.risk === "High").length}
+            </strong>
             <small>Illustrative classifications</small>
           </article>
 
@@ -183,6 +238,76 @@ function App() {
             <strong className="data-status">DEMO</strong>
             <small>No live sensors connected</small>
           </article>
+        </section>
+
+        {/* TinyFish web information search */}
+        <section className="panel search-panel">
+          <div className="panel-heading">
+            <div>
+              <p className="eyebrow">TINYFISH WEB SEARCH</p>
+              <h3>Landslide Information</h3>
+            </div>
+            <span className="tag">WEB RESEARCH</span>
+          </div>
+
+          <p>
+            Search for publicly available landslide reports and related
+            information. Results depend on the configured search service.
+          </p>
+
+          <form onSubmit={searchLandslideInfo}>
+            <label className="field-label" htmlFor="landslide-query">
+              SEARCH QUERY
+            </label>
+
+            <input
+              id="landslide-query"
+              type="text"
+              value={searchQuery}
+              onChange={(event) => setSearchQuery(event.target.value)}
+              placeholder="e.g. recent landslide reports in Uttarakhand"
+              required
+            />
+
+            <button
+              className="ml-predict-button"
+              type="submit"
+              disabled={searchLoading}
+            >
+              {searchLoading ? "Searching..." : "Search Web"}
+            </button>
+          </form>
+
+          {searchError && (
+            <p className="ml-error" role="alert">
+              {searchError}
+            </p>
+          )}
+
+          {searchResults && (
+            <div className="ml-output" aria-live="polite">
+              <span>WEB SEARCH RESPONSE</span>
+              <h3>Results for: {searchResults.query}</h3>
+
+              <pre
+                style={{
+                  whiteSpace: "pre-wrap",
+                  overflowWrap: "anywhere",
+                  fontFamily: "inherit",
+                  fontSize: "0.9rem",
+                }}
+              >
+                {JSON.stringify(searchResults.results, null, 2)}
+              </pre>
+
+              <p>{searchResults.note}</p>
+            </div>
+          )}
+
+          <p className="disclaimer">
+            Web search results are for research only. They are not verified
+            emergency alerts or official landslide warnings.
+          </p>
         </section>
 
         <section className="content-grid">
@@ -199,7 +324,9 @@ function App() {
               {locations.map((location) => (
                 <button
                   key={location.name}
-                  className={`region ${selected.name === location.name ? "selected" : ""}`}
+                  className={`region ${
+                    selected.name === location.name ? "selected" : ""
+                  }`}
                   onClick={() => selectLocation(location.name)}
                   type="button"
                 >
@@ -223,10 +350,12 @@ function App() {
                 className="leaflet-map"
               >
                 <MapFocus position={selected.position} />
+
                 <TileLayer
                   attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                   url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                 />
+
                 {locations.map((location) => (
                   <CircleMarker
                     key={location.name}
@@ -274,6 +403,7 @@ function App() {
             <label className="field-label" htmlFor="location">
               MONITORING LOCATION
             </label>
+
             <select
               id="location"
               value={selected.name}
@@ -315,6 +445,7 @@ function App() {
               <span>Terrain slope index</span>
               <strong>{selected.slope}/100</strong>
             </div>
+
             <div className="progress">
               <div style={{ width: `${selected.slope}%` }} />
             </div>
@@ -333,7 +464,7 @@ function App() {
 
             <p className="disclaimer">
               This simulator uses illustrative values and simple rules. The
-              rule-based result above is separate from the trained demo ML model.
+              rule-based result is separate from the trained demo ML model.
             </p>
 
             <div className="ml-demo">
