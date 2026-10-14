@@ -117,7 +117,7 @@ function App() {
   }
 
   async function searchLandslideInfo(event) {
-    if (event) event.preventDefault();
+    event.preventDefault();
 
     const query = searchQuery.trim();
 
@@ -240,7 +240,6 @@ function App() {
           </article>
         </section>
 
-        {/* TinyFish web information search */}
         <section className="panel search-panel">
           <div className="panel-heading">
             <div>
@@ -252,7 +251,7 @@ function App() {
 
           <p>
             Search for publicly available landslide reports and related
-            information. Results depend on the configured search service.
+            information for research and exploration.
           </p>
 
           <form onSubmit={searchLandslideInfo}>
@@ -470,10 +469,6 @@ function App() {
             <div className="ml-demo">
               <p className="eyebrow">PYTHON MODEL CONNECTION</p>
               <h3>AI/ML Demo Prediction</h3>
-              <p>
-                Send the selected sample conditions to your Flask API and view
-                the model's output.
-              </p>
 
               <button
                 className="ml-predict-button"
