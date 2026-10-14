@@ -97,6 +97,37 @@ The local API runs at `http://127.0.0.1:5000`.
 
 LandslideGuard is an educational and hackathon prototype. Its model uses synthetic demo data, and the dashboard uses illustrative sample values. Predictions are not scientifically validated and must not be used for real-world emergency decisions or official landslide warnings.
 
+## TinyFish Web Search Integration
+
+LandslideGuard integrates a web-search feature to retrieve landslide-related information for research and exploration.
+
+### How it works
+1. The user enters a search query in the dashboard.
+2. The React frontend sends the query to the Flask backend.
+3. The backend forwards the request to the configured TinyFish search service.
+4. The search response is returned and displayed on the dashboard.
+
+### API Endpoint
+`POST /landslide-info`
+
+Example request:
+
+```json
+{
+  "query": "recent landslide reports in Uttarakhand"
+}
+```
+
+### Technologies
+- React and Vite
+- Python and Flask
+- TinyFish web search API
+- React Leaflet and OpenStreetMap
+- Scikit-learn demo prediction model
+
+### Limitations
+The ML model and regional risk classifications use demo or synthetic data. Search results are intended for research and are not verified emergency alerts. LandslideGuard is a prototype, not an operational landslide-warning system.
+
 ## 👨‍💻 Author
 
 Himanshu
