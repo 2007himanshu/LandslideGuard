@@ -127,6 +127,39 @@ Example request:
 
 ### Limitations
 The ML model and regional risk classifications use demo or synthetic data. Search results are intended for research and are not verified emergency alerts. LandslideGuard is a prototype, not an operational landslide-warning system.
+## Machine Learning Model Comparison
+
+LandslideGuard includes a demonstration script to train and compare five machine learning classifiers using synthetic sample data.
+
+### Models Evaluated
+- Random Forest
+- Logistic Regression
+- Decision Tree
+- Gradient Boosting
+- Support Vector Machine (SVM)
+
+### Evaluation Metrics
+The models are evaluated using:
+- Accuracy
+- Macro Precision
+- Macro Recall
+- Macro F1-score
+
+The evaluation results are saved to `landslide_model_comparison.csv`.
+
+### Important Limitation
+The dataset contains only 30 synthetic examples, with 8 samples in the test set. The reported scores are for demonstration purposes only and do not establish real-world landslide prediction accuracy. The prototype is not suitable for operational warnings or emergency decisions.
+
+### Run the Model Comparison
+
+From the project root directory, run:
+
+```bash
+python -u backend/train_model.py
+```
+
+The comparison CSV is generated in the project root directory. The script does not replace the existing `backend/landslide_model.joblib` prediction model.
+
 
 ## 👨‍💻 Author
 
