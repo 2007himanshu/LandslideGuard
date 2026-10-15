@@ -1,4 +1,5 @@
-import { useState } from "react";
+
+import { useEffect, useState } from "react";
 import {
   MapContainer,
   TileLayer,
@@ -18,7 +19,7 @@ const locations = [
     risk: "High",
     rain: 86,
     slope: 72,
-    position: [30.402, 79.320],
+    position: [30.402, 79.32],
   },
   {
     name: "Rudraprayag",
@@ -46,9 +47,27 @@ const locations = [
   },
 ];
 
+const modelResults = [
+  { name: "Random Forest", accuracy: 100, precision: 100, recall: 100, f1: 100 },
+  { name: "Decision Tree", accuracy: 100, precision: 100, recall: 100, f1: 100 },
+  { name: "SVM", accuracy: 100, precision: 100, recall: 100, f1: 100 },
+  { name: "Logistic Regression", accuracy: 87.5, precision: 88.9, recall: 88.9, f1: 86.7 },
+  { name: "Gradient Boosting", accuracy: 87.5, precision: 88.9, recall: 88.9, f1: 86.7 },
+];
+
+const riskColors = {
+  High: "#dc2626",
+  Medium: "#d97706",
+  Low: "#059669",
+};
+
 function MapFocus({ position }) {
   const map = useMap();
-  map.setView(position, 8);
+
+  useEffect(() => {
+    map.setView(position, 8);
+  }, [map, position]);
+
   return null;
 }
 
@@ -70,12 +89,12 @@ function App() {
   function selectLocation(name) {
     const location = locations.find((item) => item.name === name);
 
-    if (location) {
-      setSelected(location);
-      setRainfall(location.rain);
-      setMlPrediction(null);
-      setMlError("");
-    }
+    if (!location) return;
+
+    setSelected(location);
+    setRainfall(location.rain);
+    setMlPrediction(null);
+    setMlError("");
   }
 
   function calculateRisk() {
@@ -103,7 +122,7 @@ function App() {
       const result = await response.json();
 
       if (!response.ok) {
-        throw new Error(result.error || "Prediction request failed");
+        throw new Error(result.error || "Prediction request failed.");
       }
 
       setMlPrediction(result);
@@ -141,15 +160,14 @@ function App() {
 
       if (!response.ok) {
         throw new Error(
-          result.error || `Search request failed (${response.status})`
+          result.error || `Search request failed (${response.status}).`
         );
       }
 
       setSearchResults(result);
     } catch (error) {
       setSearchError(
-        error.message ||
-          "Could not retrieve web information. Please try again."
+        error.message || "Could not retrieve web information. Try again."
       );
     } finally {
       setSearchLoading(false);
@@ -158,46 +176,43 @@ function App() {
 
   const risk = calculateRisk();
 
-  const riskColors = {
-    High: "#ff626c",
-    Medium: "#ffbd4a",
-    Low: "#43d9a3",
-  };
-
   return (
     <div className="app">
       <aside className="sidebar">
-        <div className="brand">
+        <a className="brand" href="#overview">
           <span className="brand-icon">⛰️</span>
-          <div>
-            <h2>LandslideGuard</h2>
-            <p>AI RISK INTELLIGENCE</p>
-          </div>
-        </div>
+          <span>
+            <strong>LandslideGuard</strong>
+            <small>AI RISK INTELLIGENCE</small>
+          </span>
+        </a>
 
         <p className="nav-label">WORKSPACE</p>
-        <div className="nav-item active">▦ &nbsp; Overview</div>
-        <div className="nav-item">⌖ &nbsp; Risk Explorer</div>
-        <div className="nav-item">◷ &nbsp; Monitoring</div>
-        <div className="nav-item">▤ &nbsp; Data &amp; Reports</div>
+        <a className="nav-item active" href="#overview">▦ &nbsp; Overview</a>
+        <a className="nav-item" href="#explorer">⌖ &nbsp; Risk Explorer</a>
+        <a className="nav-item" href="#prediction">◷ &nbsp; ML Prediction</a>
+        <a className="nav-item" href="#comparison">▤ &nbsp; Model Reports</a>
+        <a className="nav-item" href="#research">⌕ &nbsp; Web Research</a>
 
         <div className="sidebar-bottom">
-          <div className="status-dot" />
+          <span className="status-dot" />
           Prototype environment
           <p>Decision support · Demo only</p>
         </div>
       </aside>
 
-      <main className="main">
+      <main className="main" id="overview">
         <header className="topbar">
           <div>
             <p className="eyebrow">DISASTER INTELLIGENCE / INDIA</p>
             <h1>Landslide Risk Dashboard</h1>
+            <p className="subheading">
+              Explore sample terrain conditions and ML demo predictions.
+            </p>
           </div>
-          <div className="live-badge">
-            <span />
-            DEMO MODE
-          </div>
+          <span className="live-badge">
+            <span /> DEMO MODE
+          </span>
         </header>
 
         <section className="welcome">
@@ -209,13 +224,11 @@ function App() {
               Anticipate the risk.
             </h2>
             <p>
-              Explore mountain-region sample data and learn how rainfall and
-              terrain slope can influence landslide susceptibility.
+              Explore illustrative mountain-region data and learn how rainfall
+              and terrain slope can influence landslide susceptibility.
             </p>
           </div>
-          <div className="mountain-art" aria-hidden="true">
-            🏔️
-          </div>
+          <div className="mountain-art" aria-hidden="true">🏔️</div>
         </section>
 
         <section className="stats">
@@ -224,15 +237,11 @@ function App() {
             <strong>04</strong>
             <small>Sample locations</small>
           </article>
-
           <article className="stat-card">
             <span>HIGH-RISK SAMPLES</span>
-            <strong>
-              {locations.filter((item) => item.risk === "High").length}
-            </strong>
-            <small>Illustrative classifications</small>
+            <strong>{locations.filter((item) => item.risk === "High").length}</strong>
+            <small>Illustrative categories</small>
           </article>
-
           <article className="stat-card">
             <span>DATA STATUS</span>
             <strong className="data-status">DEMO</strong>
@@ -240,7 +249,7 @@ function App() {
           </article>
         </section>
 
-        <section className="panel search-panel">
+        <section className="panel search-panel" id="research">
           <div className="panel-heading">
             <div>
               <p className="eyebrow">TINYFISH WEB SEARCH</p>
@@ -249,67 +258,54 @@ function App() {
             <span className="tag">WEB RESEARCH</span>
           </div>
 
-          <p>
+          <p className="body-copy">
             Search for publicly available landslide reports and related
             information for research and exploration.
           </p>
 
-          <form onSubmit={searchLandslideInfo}>
+          <form onSubmit={searchLandslideInfo} className="search-form">
             <label className="field-label" htmlFor="landslide-query">
               SEARCH QUERY
             </label>
-
-            <input
-              id="landslide-query"
-              type="text"
-              value={searchQuery}
-              onChange={(event) => setSearchQuery(event.target.value)}
-              placeholder="e.g. recent landslide reports in Uttarakhand"
-              required
-            />
-
-            <button
-              className="ml-predict-button"
-              type="submit"
-              disabled={searchLoading}
-            >
-              {searchLoading ? "Searching..." : "Search Web"}
-            </button>
+            <div className="search-row">
+              <input
+                id="landslide-query"
+                type="text"
+                value={searchQuery}
+                onChange={(event) => setSearchQuery(event.target.value)}
+                placeholder="e.g. landslide reports in Uttarakhand"
+                required
+              />
+              <button
+                className="primary-button"
+                type="submit"
+                disabled={searchLoading}
+              >
+                {searchLoading ? "Searching..." : "Search Web"}
+              </button>
+            </div>
           </form>
 
-          {searchError && (
-            <p className="ml-error" role="alert">
-              {searchError}
-            </p>
-          )}
+          {searchError && <p className="error-message" role="alert">{searchError}</p>}
 
           {searchResults && (
-            <div className="ml-output" aria-live="polite">
-              <span>WEB SEARCH RESPONSE</span>
-              <h3>Results for: {searchResults.query}</h3>
-
-              <pre
-                style={{
-                  whiteSpace: "pre-wrap",
-                  overflowWrap: "anywhere",
-                  fontFamily: "inherit",
-                  fontSize: "0.9rem",
-                }}
-              >
+            <div className="response-box" aria-live="polite">
+              <span className="response-label">WEB SEARCH RESPONSE</span>
+              <h3>Results for: {searchResults.query || searchQuery}</h3>
+              <pre className="response-data">
                 {JSON.stringify(searchResults.results, null, 2)}
               </pre>
-
-              <p>{searchResults.note}</p>
+              {searchResults.note && <p>{searchResults.note}</p>}
             </div>
           )}
 
           <p className="disclaimer">
-            Web search results are for research only. They are not verified
-            emergency alerts or official landslide warnings.
+            Web results are for research only. They are not verified emergency
+            alerts or official landslide warnings.
           </p>
         </section>
 
-        <section className="content-grid">
+        <section className="content-grid" id="explorer">
           <article className="panel map-panel">
             <div className="panel-heading">
               <div>
@@ -323,9 +319,7 @@ function App() {
               {locations.map((location) => (
                 <button
                   key={location.name}
-                  className={`region ${
-                    selected.name === location.name ? "selected" : ""
-                  }`}
+                  className={`region ${selected.name === location.name ? "selected" : ""}`}
                   onClick={() => selectLocation(location.name)}
                   type="button"
                 >
@@ -349,12 +343,10 @@ function App() {
                 className="leaflet-map"
               >
                 <MapFocus position={selected.position} />
-
                 <TileLayer
                   attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                   url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                 />
-
                 {locations.map((location) => (
                   <CircleMarker
                     key={location.name}
@@ -385,24 +377,23 @@ function App() {
             </div>
 
             <p className="map-note">
-              Select a region or marker to explore it. Map markers show
-              illustrative categories, not verified danger levels.
+              Select a region or marker to explore it. Markers show illustrative
+              categories, not verified danger levels.
             </p>
           </article>
 
-          <article className="panel analysis-panel">
+          <article className="panel analysis-panel" id="prediction">
             <div className="panel-heading">
               <div>
                 <p className="eyebrow">RISK SIMULATOR</p>
                 <h3>Explore Conditions</h3>
               </div>
-              <span className="slider-icon">⌁</span>
+              <span className="tag">INTERACTIVE</span>
             </div>
 
             <label className="field-label" htmlFor="location">
               MONITORING LOCATION
             </label>
-
             <select
               id="location"
               value={selected.name}
@@ -444,7 +435,6 @@ function App() {
               <span>Terrain slope index</span>
               <strong>{selected.slope}/100</strong>
             </div>
-
             <div className="progress">
               <div style={{ width: `${selected.slope}%` }} />
             </div>
@@ -462,16 +452,20 @@ function App() {
             </div>
 
             <p className="disclaimer">
-              This simulator uses illustrative values and simple rules. The
-              rule-based result is separate from the trained demo ML model.
+              This simulator uses illustrative values and simple rules. Its
+              result is separate from the trained demo ML model.
             </p>
 
             <div className="ml-demo">
               <p className="eyebrow">PYTHON MODEL CONNECTION</p>
               <h3>AI/ML Demo Prediction</h3>
+              <p className="body-copy">
+                Run the connected backend model using the selected sample
+                conditions.
+              </p>
 
               <button
-                className="ml-predict-button"
+                className="primary-button full-button"
                 onClick={predictWithModel}
                 disabled={mlLoading}
                 type="button"
@@ -479,25 +473,72 @@ function App() {
                 {mlLoading ? "Predicting..." : "Run ML Prediction"}
               </button>
 
-              {mlError && (
-                <p className="ml-error" role="alert">
-                  {mlError}
-                </p>
-              )}
+              {mlError && <p className="error-message" role="alert">{mlError}</p>}
 
               {mlPrediction && (
-                <div className="ml-output" aria-live="polite">
-                  <span>MODEL OUTPUT · DEMO ONLY</span>
-                  <h3>{mlPrediction.predicted_demo_category} Category</h3>
-                  <p>{mlPrediction.warning}</p>
+                <div className="response-box" aria-live="polite">
+                  <span className="response-label">MODEL OUTPUT · DEMO ONLY</span>
+                  <h3>
+                    {mlPrediction.predicted_demo_category || "Prediction"} Category
+                  </h3>
+                  {mlPrediction.warning && <p>{mlPrediction.warning}</p>}
+                  <pre className="response-data">
+                    {JSON.stringify(mlPrediction, null, 2)}
+                  </pre>
                 </div>
               )}
             </div>
           </article>
         </section>
 
+        <section className="panel model-comparison" id="comparison">
+          <div className="panel-heading">
+            <div>
+              <p className="eyebrow">MODEL EVALUATION</p>
+              <h3>ML Model Comparison</h3>
+            </div>
+            <span className="tag">SYNTHETIC DATA</span>
+          </div>
+
+          <p className="body-copy">
+            Demo evaluation on 8 held-out samples from a synthetic dataset.
+            These scores do not represent real-world landslide prediction
+            performance.
+          </p>
+
+          <div className="comparison-table-wrap">
+            <table className="comparison-table">
+              <thead>
+                <tr>
+                  <th>Model</th>
+                  <th>Accuracy</th>
+                  <th>Precision</th>
+                  <th>Recall</th>
+                  <th>F1-score</th>
+                </tr>
+              </thead>
+              <tbody>
+                {modelResults.map((model) => (
+                  <tr key={model.name}>
+                    <td>{model.name}</td>
+                    <td>{model.accuracy.toFixed(1)}%</td>
+                    <td>{model.precision.toFixed(1)}%</td>
+                    <td>{model.recall.toFixed(1)}%</td>
+                    <td>{model.f1.toFixed(1)}%</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <p className="disclaimer">
+            Results may change with a different dataset or split. No model shown
+            here is validated for operational warnings or emergency decisions.
+          </p>
+        </section>
+
         <footer>
-          <span>LANDSLIDEGUARD · HACKATHON MVP</span>
+          <span>LANDSLIDEGUARD</span>
           <span>Research prototype · Not an official warning service</span>
         </footer>
       </main>
