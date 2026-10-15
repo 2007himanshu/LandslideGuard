@@ -1,0 +1,6 @@
+Model,Accuracy,Precision_macro,Recall_macro,F1_macro
+Random Forest,1.0,1.0,1.0,1.0
+Decision Tree,1.0,1.0,1.0,1.0
+SVM,1.0,1.0,1.0,1.0
+Logistic Regression,0.875,0.889,0.889,0.867
+Gradient Boosting,0.875,0.889,0.889,0.867
