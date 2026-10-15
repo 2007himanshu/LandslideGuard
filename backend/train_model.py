@@ -3,11 +3,20 @@ import pandas as pd
 import joblib
 
 from sklearn.model_selection import train_test_split
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import accuracy_score, classification_report
+from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
+from sklearn.linear_model import LogisticRegression
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.svm import SVC
+from sklearn.metrics import (
+    accuracy_score,
+    precision_score,
+    recall_score,
+    f1_score,
+    classification_report,
+)
 
-# DEMO DATA ONLY — these are illustrative, invented examples.
-# This model is NOT suitable for real landslide warnings.
+# DEMO DATA ONLY — invented illustrative examples.
+# Not suitable for real-world landslide warnings.
 
 data = pd.DataFrame({
     "rainfall": [
@@ -39,27 +48,66 @@ X = data[["rainfall", "slope", "soil_moisture"]]
 y = data["risk"]
 
 X_train, X_test, y_train, y_test = train_test_split(
-    X,
-    y,
-    test_size=0.25,
-    random_state=42,
-    stratify=y
+    X, y, test_size=0.25, random_state=42, stratify=y
 )
 
-model = RandomForestClassifier(
-    n_estimators=100,
-    random_state=42
+models = {
+    "Random Forest": RandomForestClassifier(
+        n_estimators=100, random_state=42
+    ),
+    "Logistic Regression": LogisticRegression(
+        max_iter=1000
+    ),
+    "Decision Tree": DecisionTreeClassifier(
+        random_state=42
+    ),
+    "Gradient Boosting": GradientBoostingClassifier(
+        random_state=42
+    ),
+    "SVM": SVC(
+        kernel="rbf"
+    ),
+}
+
+results = []
+trained_models = {}
+
+for name, model in models.items():
+    model.fit(X_train, y_train)
+    predictions = model.predict(X_test)
+
+    results.append({
+        "Model": name,
+        "Accuracy": round(accuracy_score(y_test, predictions), 3),
+        "Precision_macro": round(
+            precision_score(y_test, predictions,
+                            average="macro", zero_division=0), 3
+        ),
+        "Recall_macro": round(
+            recall_score(y_test, predictions,
+                         average="macro", zero_division=0), 3
+        ),
+        "F1_macro": round(
+            f1_score(y_test, predictions,
+                     average="macro", zero_division=0), 3
+        ),
+    })
+
+    trained_models[name] = model
+
+    print(f"\n--- {name} ---")
+    print(classification_report(
+        y_test, predictions, zero_division=0
+    ))
+
+comparison = pd.DataFrame(results).sort_values(
+    by="F1_macro", ascending=False
 )
 
-model.fit(X_train, y_train)
+comparison.to_csv("landslide_model_comparison.csv", index=False)
 
-predictions = model.predict(X_test)
-
-print("Demo accuracy:", round(accuracy_score(y_test, predictions), 2))
-print("\nClassification report:")
-print(classification_report(y_test, predictions, zero_division=0))
-
-joblib.dump(model, "landslide_model.joblib")
-
-print("\nModel saved successfully!")
-print("Reminder: trained on synthetic demo data only.")
+print("\n=== MODEL COMPARISON (synthetic demo data) ===")
+print(comparison.to_string(index=False))
+print("\nComparison saved to landslide_model_comparison.csv")
+print("Existing landslide_model.joblib was NOT changed.")
+print("Demo only — not suitable for real-world warnings.")
